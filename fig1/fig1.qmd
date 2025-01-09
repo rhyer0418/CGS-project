@@ -1,0 +1,355 @@
+---
+title: "Figure 1.Gut and biliary tract microbiome diversity and structure analysis "
+author: "Ye Liu"
+date: "2024/1/20"
+format: html
+---
+
+## a. Study design and flow diagram
+
+(a) A total of 191 samples of 3 types were collected, including 119 fecal samples, 47 bile samples, and 25 stone samples after rigorous inclusion and exclusion criteria. Bile and fecal samples were detected using UHPLC-MS/MS to characterize metabolites.
+
+This figure is manually drawn by Adobe Illustrator. ![](fig1a.jpg) \## b-c. Taxonomy composition
+
+(b-c) Relative abundance of the bacterial community in both groups at the level of phylum (B) and genus (C).
+
+fig1b:
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 3
+#| fig.height: 1
+#| out.width: "100%"
+library(reshape2)
+library(ggplot2)
+library(randomcoloR)
+library(ggsci)
+library(ggplot2)
+library(gridExtra)
+library(showtext)
+
+data<- read.csv("Phylum_relative.csv",header=T)
+
+#分组样本的堆叠图
+id=data$Phylum
+data_g=data.frame(id)
+data_g$group=data$Phylum
+phylum=data[2:6]
+Taxonomy=colnames(phylum)
+data_frame=data.frame(t(phylum), Taxonomy)
+data_g$id<-as.character(data_g$id)
+names(data_frame)[1:4]=data_g$id
+data_frame<-data_frame[1:5,]
+data_frame=melt(data_frame, id='Taxonomy')
+names(data_frame)[2]='id'
+data_frame=merge(data_frame, data_g, by='id')
+data_frame$id <- as.character(data_frame$id)
+data_frame$value<-as.numeric(data_frame$value)
+a<-tapply(data_frame$value,data_frame$id,sum)
+
+data_frame$Taxonomy=factor(data_frame$Taxonomy, levels=c('Firmicutes','Bacteroidota','Proteobacteria','Actinobacteriota',
+                                                         "Others"))
+
+pdf("fig1b.pdf",width = 3,height = 1)  ## 必须保存；pdf、png、jpg
+
+p1=ggplot(data_frame, aes(x=reorder(id,-as.numeric(Taxonomy=='Firmicutes')*value/a[id]), fill=Taxonomy,value))+
+  geom_col(position='stack', width = 0.8) +
+  labs(x='', y='Relative Abundance (%)')+
+  coord_flip() + #倒置
+  #scale_fill_manual(values = c("#b5182b","#f9cb45","#34a186","#DC143C","#00AFBB"))+
+  theme_classic()+
+  scale_y_continuous(expand=c(0, 0))+
+  theme(axis.text.x=element_blank(),axis.ticks.x = element_blank())+
+  theme(legend.position="right",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 10,face = "bold"),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 9),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        legend.text=element_text(size=7),
+        legend.title=element_text(size = 8),
+        legend.key.size = unit(7, "points"),  # 设置图例色框
+        plot.margin = margin(0, 0, 0, 0.1, "cm")  # 设置左边空白
+        )
+p2<-p1+scale_fill_simpsons(alpha = 0.9)
+p2
+
+dev.off()
+
+p2
+
+```
+
+fig1c:
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 3.5
+#| fig.height: 3
+#| out.width: "100%"
+library(ggrepel)
+library(ggplot2)
+library(ggsci)
+library(ggplot2)
+library(gridExtra)
+
+bubble<-read.csv("genus_bubble.csv",header = TRUE)
+bubble$Group <- factor(bubble$Group, levels = c('Health', 'Disease',"Bile","Stone"))
+
+pdf("fig1c.pdf",width = 4,height = 3) 
+p1<-ggplot(data=bubble,aes(x=Group,y=Genus))+
+  geom_point(aes(size=Size,fill=Group),shape=21,stroke = 0,alpha=1)+
+  theme_test()+
+  theme(legend.position="right",
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 8,face = "bold"),
+        axis.title.y = element_text(size = 8,face = "bold"),
+        axis.text.x = element_text(size = 6),
+        axis.text.y = element_text(size = 8),
+        panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank())+
+  labs(size="Relative abundance (%)",x=" ",y=" ")+
+  scale_size_continuous(range = c(1,3.8))+
+  scale_fill_simpsons(alpha = 1)
+p1
+dev.off()  
+
+p1
+
+```
+
+Adobe Illustrator for Legend Optimization.
+
+## d-e. Alpha diversity
+
+Chao1 (D) and ACE (E) index.
+
+fig1d:
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 1.5
+#| fig.height: 2
+#| out.width: "100%"
+library(vegan)	#用于计算 Shannon 熵指数、Simpson 指数、Chao1 指数、ACE 指数等，同时用于抽样
+library(picante)	#用于计算 PD_whole_tree，若不计算它就无需加载。事实上，picante 包加载时默认同时加载 vegan
+library(ggplot2)	#用于 ggplot2 作图
+library(doBy)	#用于分组统计
+library(ggalt)
+library(RColorBrewer)
+library(picante)
+library(ggpubr)
+
+alpha <- function(x, tree = NULL, base = exp(1)) {
+  est <- estimateR(x)
+  Richness <- est[1, ]
+  Chao1 <- est[3, ]
+  ACE <- est[5, ]
+  Shannon <- diversity(x, index = 'shannon', base = base)
+  Simpson <- diversity(x, index = 'simpson')    #Gini-Simpson 指数
+  Pielou <- Shannon / log(Richness, base)
+  goods_coverage <- 1 - rowSums(x == 1) / rowSums(x)
+  
+  result <- data.frame(Richness, Shannon, Simpson, Pielou, Chao1, ACE, goods_coverage)
+  result
+}
+
+#导入数据
+diff_alpha <- read.csv("alpha_16S_all.csv",row.names = 1,header=T)
+
+# 分组添加levels，分组有时间顺序
+diff_alpha$Group<- factor(diff_alpha$Group, levels = c('Health', 'Disease',"Bile","Stone"))
+
+pdf("fig1d.pdf",width = 1.2,height = 1.5) 
+p<-ggplot(diff_alpha, aes(x=Group, y=Chao1))+
+  geom_violin(aes(fill = Group), position = position_dodge(0.9),alpha = 0.9 ,width = 1.0,linetype = "blank") +
+  geom_boxplot(aes(fill=Group),position = position_dodge(0.9),lwd=0.1,width = 0.3,outlier.shape = NA)+
+  theme_classic()+
+  xlab("")+labs(y="Chao1 index of ASV level")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype =" blank", size = 0.1), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 7,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 6,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 7),
+        #panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=5),
+        legend.title=element_blank())
+p1<-p+scale_fill_manual(values = c("#A00002","#000000","#0850A1","#999999"))+
+  scale_color_manual(values = c("#A00002","#000000","#0850A1","#999999"))+
+  stat_compare_means(comparisons = list(c('Health', 'Disease'),
+                                        c('Health', 'Bile'),
+                                        c('Health', 'Stone'),
+                                        c('Disease', 'Bile'),
+                                        c('Disease', 'Stone'),
+                                        c('Bile', 'Stone')),size=2)
+p1
+dev.off() 
+
+p1
+
+```
+
+fig1e:
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 1.5
+#| fig.height: 2
+#| out.width: "100%"
+library(vegan)	#用于计算 Shannon 熵指数、Simpson 指数、Chao1 指数、ACE 指数等，同时用于抽样
+library(picante)	#用于计算 PD_whole_tree，若不计算它就无需加载。事实上，picante 包加载时默认同时加载 vegan
+library(ggplot2)	#用于 ggplot2 作图
+library(doBy)	#用于分组统计
+library(ggalt)
+library(RColorBrewer)
+library(picante)
+library(ggpubr)
+
+alpha <- function(x, tree = NULL, base = exp(1)) {
+  est <- estimateR(x)
+  Richness <- est[1, ]
+  Chao1 <- est[3, ]
+  ACE <- est[5, ]
+  Shannon <- diversity(x, index = 'shannon', base = base)
+  Simpson <- diversity(x, index = 'simpson')    #Gini-Simpson 指数
+  Pielou <- Shannon / log(Richness, base)
+  goods_coverage <- 1 - rowSums(x == 1) / rowSums(x)
+  
+  result <- data.frame(Richness, Shannon, Simpson, Pielou, Chao1, ACE, goods_coverage)
+  result
+}
+
+#导入数据
+diff_alpha <- read.csv("alpha_16S_all.csv",row.names = 1,header=T)
+
+# 分组添加levels，分组有时间顺序
+diff_alpha$Group<- factor(diff_alpha$Group, levels = c('Health', 'Disease',"Bile","Stone"))
+
+
+pdf("fig1e.pdf",width = 1.2,height = 1.5) 
+p<-ggplot(diff_alpha, aes(x=Group, y=ACE))+
+  geom_violin(aes(fill = Group), position = position_dodge(0.9),alpha = 0.9 ,width = 1.0,linetype = "blank") +
+  geom_boxplot(aes(fill=Group),position = position_dodge(0.9),lwd=0.1,width = 0.3,outlier.shape = NA)+
+  #geom_jitter(aes(fill=Group),width =0.2,shape = 21,size=0.1)+
+  #注意画图顺序，如果反过来会出现十字先stat再geom
+  theme_classic()+
+  xlab("")+labs(y="ACE index of ASV level")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype =" blank", size = 0.1), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 7,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 6,angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 7),
+        #panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=5),
+        legend.title=element_blank())
+p1<-p+scale_fill_manual(values = c("#A00002","#000000","#0850A1","#999999"))+
+  scale_color_manual(values = c("#A00002","#000000","#0850A1","#999999"))+
+  stat_compare_means(comparisons = list(c('Health', 'Disease'),
+                                        c('Health', 'Bile'),
+                                        c('Health', 'Stone'),
+                                        c('Disease', 'Bile'),
+                                        c('Disease', 'Stone'),
+                                        c('Bile', 'Stone')),size=2)
+p1
+dev.off()  
+
+p1
+
+```
+
+## f. Heatmap of the relative abundances of top 20 genus for each sample in both groups.
+
+HCs, healthy controls; CGS, cholesterol gallstone patients; ASVs, amplicon sequence variants; LD, lithogenic diet; SCFAs, short-chain fatty acids; UHPLC-MS/MS, Ultra-high performance liquid chromatography-mass spectrometry/mass spectrometry.
+
+fig1f:
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 4.5
+#| fig.height: 3
+#| out.width: "100%"
+library(ggcorrplot)
+library(ggthemes)
+library(pheatmap)
+library(psych)
+library(gridExtra)
+library(grid)
+data<- read.csv("genus_top20.csv",row.names = 1,header=T)
+
+drows = dist(data, method = "manhattan")
+dcols = dist(t(data), method = "manhattan")
+
+annotation_col = read.csv("group_name.csv",row.names=1,header = T)
+annotation_col$Group<-as.factor(annotation_col$Group)
+
+ann_colors = list(
+  Group =c("Health"="#FED854","Disease"="#5A88FA","Bile"="#D7B78E","Stone"="#FE825C"))
+head(ann_colors)
+
+pdf("fig1f.pdf",width = 5,height = 3.5) 
+heatmap<-pheatmap(data,cluster_cols=T,cluster_row=F,scale = "column",clustering_method="ward.D",
+            annotation_col = annotation_col,
+            annotation_colors = ann_colors,
+         clustering_distance_rows = drows, clustering_distance_cols = dcols,
+         cellwidth=1,cellheight=6.5,fontsize_number=1,number_color="white",
+         fontsize_row=8,fontsize_col=2.5,
+         color=colorRampPalette(colors = c("#0750A1","white","#386092"))(100),
+         border="white" ,
+         legend=FALSE
+  )
+
+dev.off()  
+
+heatmap<-pheatmap(data,cluster_cols=T,cluster_row=F,scale = "column",clustering_method="ward.D",
+            annotation_col = annotation_col,
+            annotation_colors = ann_colors,
+         clustering_distance_rows = drows, clustering_distance_cols = dcols,
+         cellwidth=1,cellheight=6.5,fontsize_number=1,number_color="white",
+         fontsize_row=8,fontsize_col=2.5,
+         color=colorRampPalette(colors = c("#0750A1","white","#386092"))(100),
+         border="white" ,
+         legend=FALSE
+  )
+heatmap
+```
+
+![](fig1f.jpg) 

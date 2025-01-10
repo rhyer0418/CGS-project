@@ -1,0 +1,590 @@
+---
+title: "Figure 2 The difference of gut microbiota in CGS and HCs according to the metagenomic data "
+author: "Ye Liu"
+date: "2024/1/20"
+format: html
+---
+
+fig2a. Alpha diversity ACE index of species between groups.
+
+## a. Alpha diversity
+
+ACE index.
+
+fig2a:
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 1.8
+#| fig.height: 2.2
+#| out.width: "100%"
+library(vegan)	
+library(picante)
+library(ggplot2)	
+library(doBy)	
+library(ggalt)
+library(RColorBrewer)
+library(picante)
+library(ggpubr)
+
+alpha <- function(x, tree = NULL, base = exp(1)) {
+  est <- estimateR(x)
+  Richness <- est[1, ]
+  Chao1 <- est[3, ]
+  ACE <- est[5, ]
+  Shannon <- diversity(x, index = 'shannon', base = base)
+  Simpson <- diversity(x, index = 'simpson')    #Gini-Simpson 指数
+  Pielou <- Shannon / log(Richness, base)
+  goods_coverage <- 1 - rowSums(x == 1) / rowSums(x)
+  
+  result <- data.frame(Richness, Shannon, Simpson, Pielou, Chao1, ACE, goods_coverage)
+  result
+}
+
+#导入数据
+diff_alpha <- read.csv("alpha_match_s.csv",row.names = 1,header=T)
+# 分组添加levels，分组有时间顺序
+diff_alpha$Group<- factor(diff_alpha$Group, levels = c('Health', 'Disease'))
+
+
+#先用各组箱线图查看数据分布
+pdf("fig2a.pdf",width = 1.8,height = 2.2) 
+p<-ggplot(diff_alpha, aes(x=Group, y=ACE))+
+  #stat_boxplot(geom="errorbar",position = position_dodge(0.9),width=0.2,aes(color=Group))+
+  geom_violin(aes(fill = Group), position = position_dodge(0.9),alpha = 0.9 ,width = 1.0,linetype = "blank") +
+  geom_boxplot(aes(fill=Group),position = position_dodge(0.9),lwd=0.1,width = 0.3,outlier.shape = NA)+
+  #geom_jitter(aes(fill=Group),width =0.2,shape = 21,size=0.1)+
+  #注意画图顺序，如果反过来会出现十字先stat再geom
+  theme_classic()+
+  xlab("")+labs(y="ACE index of species level")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype =" blank", size = 0.1), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 9,face = "bold"),
+        axis.title.y = element_text(size = 10,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        #panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=5),
+        legend.title=element_blank())
+p1<-p+scale_fill_manual(values = c("#000000","#A00002"))+
+  scale_color_manual(values = c("#000000","#A00002"))+
+  stat_compare_means(comparisons = list(c('Health', 'Disease')),size=2)
+p1
+dev.off()  
+
+p1
+```
+
+## b. Differential abundance of gut microbiota
+
+fig2b: Green and blue represented the healthy controls (n = 30) and gallstone patients (n = 30), respectively.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 3.6
+#| fig.height: 2.5
+#| out.width: "100%"
+library(ggplot2)
+library(ggpubr)
+library(RColorBrewer)
+library(ggsci)
+library(ggplot2)
+library(gridExtra)
+library(reshape2)
+
+diff8<-read.csv("sig_species_rel.csv",header = T)
+data_frame=melt(diff8, id='Species')
+names(data_frame)[2]='id'
+data_frame$Group<-"Health"
+data_frame[331:660,4] <- "Disease"
+data_frame$value<-as.numeric(data_frame$value)
+data_frame$num<-log10(data_frame$value)
+data_frame$num[is.infinite(data_frame$num)]=0
+
+pdf("fig2b.pdf",width = 3.6,height = 2.5)  ## 必须保存；pdf、png、jpg
+p<-ggplot(data_frame,aes(x=reorder(Species,num),y=num))+
+  stat_boxplot(geom="errorbar",position = position_dodge(0.9),width=0.3,aes(color=Group))+
+  geom_boxplot(aes(fill=Group),color=NA,position = position_dodge(0.9),lwd=0.6)+
+  theme_classic()+
+  xlab("")+ ylab("")+
+  coord_flip()+
+  labs(y="Log10(Relative abundance)",x="Species")+
+  theme(legend.position='top',legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6),
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        #panel.border = element_rect(fill=NA,colour = 'black',size=1.5),
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 10,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1))
+p1<-p+scale_fill_manual(values = c("#0072B5","#749884"))+scale_color_manual(values = c("#0072B5","#749884"))
+p1
+dev.off()  
+
+p1
+```
+
+## c. LefSe analysis
+
+analysis on the website: <https://www.bic.ac.cn/BIC/#/analysis?tool_type=tool&page=b%27MzY%3D%27>
+
+![](fig2c.jpg)
+
+## d. ROC analysis
+
+Receiver operating characteristic (ROC) analysis to discriminate CGS from HCs based on strains to be verified (C. glycyrrhizinilyticum, R. gnavus, and F. prausnitzii). 
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 2.1
+#| fig.height: 2
+#| out.width: "100%"
+library(plyr)
+library(pROC)
+library(ROCR) 
+
+diff<-read.csv("sig_species_roc.csv",header = T,row.names = 1)
+
+diff$group<-as.factor(diff$group)
+
+
+fit2=glm(data=diff,group~	
+           Faecalibacterium.prausnitzii,family = binomial()) 
+fit3=glm(data=diff,group~	
+           X.Ruminococcus..gnavus,family = binomial()) 
+fit4=glm(data=diff,group~	
+           X.Clostridium..glycyrrhizinilyticum,family = binomial()) 
+
+
+prob2 <- predict(fit2, diff, type = "response")
+rocboj2<-roc(diff$group,prob2)
+roc_result <- coords(rocboj2, "best")
+auc2<-round(auc(diff$group,prob2),4)
+
+pdf("Fp_ROC.pdf",
+    width = 2.1,height = 2)
+p=ggroc(rocboj2,color="#0072B5", linetype=1,size=1,alpha=1,legacy.axes = T) +
+  geom_abline(intercept = 0,slope = 1,color="grey",size=1,linetype=2)+
+  labs(x="False Positive Rate (1 - Specificity)", y="True Positive Rate (Sensitivity)") +
+  annotate("text",x=.75,y=.25,label=paste("AUC=",auc2),size=2.5,family="serif")+
+  coord_cartesian(xlim = c(0,1),ylim = c(0,1))+
+  theme_bw() +
+  theme(panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 8.5,face = "bold"),
+        axis.title.y = element_text(size =8.5,face = "bold"),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 9),
+        panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        legend.text=element_text(size=10),
+        legend.title=element_blank())
+p1=p+scale_y_continuous(breaks = c(0.00,0.25,0.50,0.75,1.00),expand=c(0,0))+expand_limits(y=c(0,1))
+p1
+dev.off()
+
+p1
+
+prob2 <- predict(fit3, diff, type = "response")
+rocboj2<-roc(diff$group,prob2)
+roc_result <- coords(rocboj2, "best")
+auc2<-round(auc(diff$group,prob2),4)
+
+pdf("Rg_ROC.pdf",
+    width = 2.1,height = 2)
+p=ggroc(rocboj2,color="#E38A04", linetype=1,size=1,alpha=1,legacy.axes = T) +
+  geom_abline(intercept = 0,slope = 1,color="grey",size=1,linetype=2)+
+  labs(x="False Positive Rate (1 - Specificity)", y="True Positive Rate (Sensitivity)") +
+  annotate("text",x=.75,y=.25,label=paste("AUC=",auc2),size=2.5,family="serif")+
+  coord_cartesian(xlim = c(0,1),ylim = c(0,1))+
+  theme_bw() +
+  theme(panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 8.5,face = "bold"),
+        axis.title.y = element_text(size =8.5,face = "bold"),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 9),
+        panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        legend.text=element_text(size=10),
+        legend.title=element_blank())
+p2=p+scale_y_continuous(breaks = c(0.00,0.25,0.50,0.75,1.00),expand=c(0,0))+expand_limits(y=c(0,1))
+p2
+dev.off()
+
+p2
+
+prob2 <- predict(fit4, diff, type = "response")
+rocboj2<-roc(diff$group,prob2)
+roc_result <- coords(rocboj2, "best")
+auc2<-round(auc(diff$group,prob2),4)
+
+pdf("Cg_ROC.pdf",
+    width = 2.1,height = 2)
+p=ggroc(rocboj2,color="#208548", linetype=1,size=1,alpha=1,legacy.axes = T) +
+  geom_abline(intercept = 0,slope = 1,color="grey",size=1,linetype=2)+
+  labs(x="False Positive Rate (1 - Specificity)", y="True Positive Rate (Sensitivity)") +
+  annotate("text",x=.75,y=.25,label=paste("AUC=",auc2),size=2.5,family="serif")+
+  coord_cartesian(xlim = c(0,1),ylim = c(0,1))+
+  theme_bw() +
+  theme(panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 8.5,face = "bold"),
+        axis.title.y = element_text(size =8.5,face = "bold"),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 9),
+        panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        legend.text=element_text(size=10),
+        legend.title=element_blank())
+p3=p+scale_y_continuous(breaks = c(0.00,0.25,0.50,0.75,1.00),expand=c(0,0))+expand_limits(y=c(0,1))
+p3
+dev.off()
+
+p3
+```
+
+## e. The variance of biochemical indices explained by different bacterial species
+
+The height of each bar represented the explained variance calculated using univariate linear regression. The bar represented significant differences (*p* \< 0.05).
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 10
+#| fig.height: 5
+#| out.width: "100%"
+library(tidyverse)
+
+significant_microbes<-read.csv("lm_variance explained.csv",header = T)
+# 假设显著性水平为 0.05
+significant_microbes <- significant_microbes %>%
+  filter(P_value < 0.05) # 这里根据需要调整显著性水平
+significant_microbes$Var_Name<-factor(significant_microbes$Var_Name,levels=c('HDLC','LDLC','ALT','AST','TC','TG','TBIL'))
+
+pdf("fig2e.pdf",width = 10,height =5) 
+p1<-ggplot(significant_microbes, aes(x = 100*R_squared, y = reorder(Microbe, R_squared))) +
+  geom_bar(stat = "identity", aes(fill = R_squared), width = 0.5) +
+  facet_wrap(~ Var_Name, ncol = 7) +
+  scale_fill_gradient(low = "#4AACC7", high = "#0072B5",guide = "none") + # 设置渐变色范围
+  labs(x = "Variance explained (%)", y = "Microbe") +
+  theme_classic()+
+  theme(legend.key = element_blank(),
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        #axis.title.y = element_text(size = 15,face = "bold"),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 9),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        axis.title.y=element_blank()) + # 调整y轴标签字体大小
+  ggtitle("")
+p1
+dev.off()
+
+p1
+
+```
+
+## f. The significant difference relative abundance of each predicted functional category given in the KEGG pathways (level 3)
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 6
+#| fig.height: 3
+#| out.width: "100%"
+library(ggplot2)
+
+diff<-read.csv("sig_kegg_level3.csv",header = T)
+
+pdf("fig2f.pdf",
+    width =6,height = 3)
+p<-ggplot(diff,aes(x=Species,y=value))+
+  #geom_boxplot(aes(color = Group),position = position_dodge(0.1),lwd=0.5, orientation = "horizontal")+#注意画图顺序，如果反过来会出现十字先stat再geom
+  geom_point(aes(color = Group), position = position_dodge(0.9), shape =1, size = 3,fill=NA, stroke = 1) +  #theme_test()+
+  xlab("")+coord_flip()+labs(y="Abundance difference")+
+  theme(legend.position="bottom",
+        legend.key = element_blank(),
+        panel.grid = element_line(color = 'gray', linetype = 1, size = 0.1), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+       # legend.text=element_text(size=9),
+        legend.title=element_blank())
+p1<-p+scale_color_manual(name = "Group",values = c("#0072B5","#E38A06"))
+p1
+dev.off()
+
+p1
+```
+
+## g. Plot of all alterations KO gene related representative metabolism pathway.
+
+Size of circles represents number of KO identified with an alteration. CGS, cholesterol gallstone patients; HCs, healthy controls.
+
+加载函数：`gather_graph_node()` 和 `gather_graph_edge() 见script/`
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+
+#' Gather graph node from data.frame
+#'
+#' @inheritParams gather_graph
+#' @param value
+#'
+#' @return a tibble
+#' @export
+#'
+#' @examples
+#'  library(ccgraph)
+#'  data(OTU)
+#'  nodes <- gather_graph_node(OTU,index = c("p","c","o"))
+#' @importFrom tidyr unite
+gather_graph_node <- function(df,index=NULL,value=tail(colnames(df),1),root=NULL){
+  require(dplyr)
+  if (length(index) < 2){
+    stop("please specify at least two index column(s)")
+  } else {
+    list <- lapply(seq_along(index), function(i){
+      dots <- index[1:i]
+      df %>%
+        group_by(.dots=dots) %>%
+        summarise(node.size=sum(.data[[value]]),
+                  node.level=index[[i]],
+                  node.count=n()) %>%
+        mutate(node.short_name=as.character(.data[[ dots[[length(dots)]] ]]),
+               node.branch = as.character(.data[[ dots[[1]]]])) %>%
+        tidyr::unite(node.name,dots,sep = "/")
+    })
+    data <- do.call("rbind",list) %>% as_tibble()
+    data$node.level <- factor(data$node.level,levels = index)
+
+    if (is.null(root)){
+      return(data)
+    } else {
+      root_data <- data.frame(node.name=root,
+                              node.size=sum(df[[value]]),
+                              node.level=root,
+                              node.count=1,
+                              node.short_name=root,
+                              node.branch=root,
+                              stringsAsFactors = F)
+      data <- rbind(root_data,data)
+      data$node.level <- factor(data$node.level, levels = c(root,index))
+      return(data)
+    }
+  }
+}
+
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+
+#' Gather graph node from data.frame
+#'
+#' @param df a data.frame
+#' @param index  grouping
+#' @param root root name
+#'
+#' @return a tibble
+#' @export
+#'
+#' @examples
+#'  ibrary(ccgraph)
+#'  data(OTU)
+#'  edges <- gather_graph_edge(OTU,index = c("p","c","o"))
+#' @importFrom tidyr unite
+#'
+#' @name gather_graph
+gather_graph_edge <- function(df,index=NULL,root=NULL){
+  require(dplyr)
+  if (length(index) < 2){
+    stop("please specify at least two index column(s)")
+  } else if (length(index)==2){
+    data <- df %>% mutate(from=.data[[index[[1]]]]) %>%
+      tidyr::unite(to,index,sep="/") %>%
+      select(from,to) %>%
+      mutate_at(c("from","to"),as.character)
+  } else {
+    list <- lapply(seq(2,length(index)), function(i){
+      dots <- index[1:i]
+      df %>% tidyr::unite(from,dots[-length(dots)],sep = "/",remove = F)  %>%
+        tidyr::unite(to,dots,sep="/") %>%
+        select(from,to) %>%
+        mutate_at(c("from","to"),as.character)
+    })
+    data <- do.call("rbind",list)
+  }
+  data <- as_tibble(data)
+  if (is.null(root)){
+    return(data)
+  } else {
+    root_data <- df %>% group_by(.dots=index[[1]]) %>%
+      summarise(count=n()) %>%
+      mutate(from=root,to=as.character(.data[[index[[1]]]] )) %>%
+      select(from,to)
+    rbind(root_data,data)
+  }
+
+}
+
+```
+
+## 
+
+```{r}
+#| echo: false
+#| eval: false
+#| results: false
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 5
+#| fig.height: 6.3
+#| out.width: "100%"
+library(ggplot2)
+library(tidygraph)
+library(ggraph)
+
+df <- read.csv("very_easy_input1.csv")
+#head(df)
+
+geneSpecial <- read.table("gene_special.txt", header = T)
+geneCol <- geneSpecial$Type
+names(geneCol) <- geneSpecial$Gene
+geneCol
+#加载函数：`gather_graph_node()` 和 `gather_graph_edge()`
+nodes <- gather_graph_node(df, index = c("term", "genes"), value = "logFC", root="all")
+edges <- gather_graph_edge(df, index = c("term", "genes"), root = "all")
+nodes <- nodes %>% mutate_at(c("node.level","node.branch"),as.character)
+#head(nodes, 10)
+#head(edges, 10)
+
+# 把要突出显示的基因类型信息加到nodes里
+nodes$color <- "normal"
+nodes[nodes$node.short_name %in% geneSpecial$Gene,]$color <- geneCol[nodes[nodes$node.short_name %in% geneSpecial$Gene,]$node.short_name]
+nodes[nodes$node.short_name %in% geneSpecial$Gene,]
+nodes$color <- factor(nodes$color, levels = unique(nodes$color))
+
+
+# 有了节点和边的数据，使用 `tbl_graph()` 便可以得到一个图。
+graph <- tbl_graph(nodes, edges)
+
+# 用 `ggraph` 出图
+gc <- ggraph(graph, layout = 'dendrogram', circular = TRUE) + 
+  # 使用 filter 参数去掉 root（前面设置为"all"）节点及与其相连的边
+  geom_edge_diagonal(aes(color = node1.node.branch,
+                         filter=node1.node.level!="all"), 
+                     alpha = 1,edge_width=1) + 
+  geom_node_point(aes(size = node.size, 
+                      color = node.branch,
+                      filter=node.level!="all"), alpha = 0.9) + 
+  scale_size(range = c(0.5,8)) + #做均一化处理，让点的大小介于range之间
+  theme(legend.position = "none") + #不画图例
+  
+  # 点和边的配色
+  # 如果要改变边的配色，需要同时给边和点变色，否则会对应不上
+  #scale_edge_color_brewer(palette = "Set1") + #用?scale_color_brewer查看更多配色方案
+  #scale_color_brewer(palette = "Set1") +
+  scale_edge_color_manual(values = c("#FF7F00","#E18727FF","#7E6148B2","#EE4C97FF",
+                                     "#FFDC91FF","#F39B7FB2","#BC3C29FF","#20854EFF","#7876B1FF",
+                                     "#80796BFF","#984EA3","#0072B5FF","#FB8072","#61C3ED","#BEBADA",  
+                                     #"#D95F02","#80B1D3","#BEBADA","#8DD3C7","#E41A1C",
+                                     "#a06fda","#dd6bbb","#334c22","#5b83db","#6F99ADFF")) + #自定义颜色
+  scale_color_manual(values = c("#FF7F00","#E18727FF","#7E6148B2","#EE4C97FF",
+                                "#FFDC91FF","#F39B7FB2","#BC3C29FF","#20854EFF","#7876B1FF",
+                                "#80796BFF","#984EA3","#0072B5FF","#FB8072","#61C3ED","#BEBADA",  
+                                #"#D95F02","#80B1D3","#BEBADA","#8DD3C7","#E41A1C",
+                                "#a06fda","#dd6bbb","#334c22","#5b83db","#6F99ADFF")) + #自定义颜色
+  
+  # 添加周围注释文字，此处是基因名gene
+  geom_node_text(
+    aes(
+      x = 1.05 * x, #控制字跟点的距离
+      y = 1.05 * y, #控制字跟点的距离
+      label = node.short_name,
+      angle = -((-node_angle(x, y) + 90) %% 180) + 90,
+      filter = leaf
+    ),
+    color="black", #统一为黑色字
+    size = 3, hjust = 'outward') + theme(legend.position = "none")+
+  
+  # 添加内环文字，此处是通路名term
+  #geom_node_text(
+   # aes(label=node.short_name,
+    #    filter = !leaf & (node.level != "all")
+    #),
+    #color="black", #统一为黑色字
+    #fontface="bold",
+    #size=3,
+    #family="sans"
+  #) + 
+  # 添加内环文字
+  theme(legend.position = "bottom",legend.title = element_blank(),legend.spacing = unit(0.1, "lines"),
+        legend.key = element_blank(),legend.text = element_text(size = 3),
+        plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+        legend.background = element_blank()) + # 设置图例位置为底部
+  theme(panel.background = element_rect(fill = NA)) +
+  guides(color = guide_legend(override.aes = list(size = 0.2), keyheight = unit(0.2, "cm"), keywidth = unit(0.2, "cm")))
+  #coord_cartesian(xlim=c(-1.3,1.3),ylim = c(-1.3,1.3)) #扩大坐标系
+gc
+
+ggsave("fig2g.pdf", width = 6, height =6)
+
+```
+
+Adobe Illustrator for Legend Optimization.
+
+![](fig2g.jpg)
+
+## 

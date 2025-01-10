@@ -1,0 +1,340 @@
+---
+title: "Figure 5. Oral administration of selected species influenced LD-induced cholesterol gallstones"
+author: "Ye Liu"
+date: "2024/1/20"
+format: html
+---
+
+a\. Schematic diagram for species gavage.
+
+This figure is manually drawn by Adobe Illustrator.
+
+c\. Abundance of *C. glycyrrhizinilyticum*, *R. gnavus*, and *F. prausnitzii* quantified by qPCR with specific primers.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 1
+#| fig.height: 1.4
+#| out.width: "100%"
+#| 
+library(tidyr)
+library(ggplot2)
+library(ggsci)
+library(dplyr)
+library(picante)
+library(ggpubr)
+library(readxl)
+
+cli1<-read_xlsx("1.biochemical.xlsx", 3 )
+cli1$Group<-factor(cli1$Group,levels = c("LD","Cg","Rg","Fp"))
+
+pdf("fig5c.pdf",
+    width = 1.1,height = 1.4)
+
+p<-ggplot(cli1, aes(x = Group, y = value, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="-△△CT")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2),
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880"))
+p2=p1+scale_y_continuous(breaks = c(0, 2, 4, 6,8,10,12),expand=c(0,0))+expand_limits(y=c(0,12))+
+  scale_color_manual(values =  c("#B2B9C1","#35395A","#E4B6B4","#C0C880"))
+p2
+
+dev.off()
+p2
+```
+
+e-l: Box plot
+
+\(E\) The relative lipid content of each group. Each box centres on the median, with lower and upper bounds representing the first and third quartile (25th and 75th percentile), respectively (*n* = 8). (F) The ratio of liver weight to body weight in different groups. (G−H) Level of serum glucose and serum TBA. (I−L) Levels of serum ALT, AST, TC, and TG.
+
+TC, total cholesterol; TG, triglycerides; ALT, alanine aminotransferase; AST, aspartate aminotransferase; TBA, total bile acid;Cg, *Clostridium glycyrrhizinilyticum*; Rg, *Ruminococcus gnavus*; Fp, *Faecalibacterium prausnitzii*. *p*-values were calculated using one-way ANOVA with Dunnett’s post hoc test.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 1
+#| fig.height: 1.4
+#| out.width: "100%"
+library(reshape2)
+library(ggplot2)
+library(randomcoloR)
+library(ggsci)
+library(ggplot2)
+library(gridExtra)
+library(showtext)
+library(readxl)
+
+cli3 <- read_xlsx("rel_lipid_oil.xlsx", 2)
+
+cli3$Group<-factor(cli3$Group,levels = c("LD","Cg","Rg","Fp"))
+
+# Shapiro-Wilk normality test for each group
+#by(cli3$`Relative Area of Lipid Droplets`, cli3$Group, shapiro.test)
+
+#aov_result <- aov(`Relative Area of Lipid Droplets` ~ Group, data = cli3)
+# 2. 使用 Dunnett's t-test 进行事后比较
+#library(multcomp)
+#dunnett_result <- glht(aov_result, linfct = mcp(Group = "Dunnett"))
+# 查看 Dunnett 检验的结果
+#summary(dunnett_result)
+
+pdf("Lipid_bacteria.pdf",
+    width = 1.1,height = 1.5)
+p <- ggplot(cli3, aes(x = Group, y = `Relative Area of Lipid Droplets`, fill = factor(Group))) +
+  geom_violin(aes(fill = Group), position = position_dodge(0.9),alpha = 0.9 ,width = 1.0,linetype = "blank") +
+  geom_boxplot(aes(fill=Group),position = position_dodge(0.9),lwd=0.1,width = 0.3,outlier.shape = NA)+
+  theme_classic() +
+  xlab("") +
+  labs(y = "Relative Area of Lipid Droplets") +
+  theme(legend.position = "none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2),
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 8, face = "bold"),
+        axis.title.y = element_text(size = 8, face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x = element_line(color = "black", size = 1, lineend = 1),
+        axis.ticks.y = element_line(color = "black", size = 1, lineend = 1),
+        legend.text = element_text(size = 9),
+        legend.title = element_blank(),
+        plot.margin =unit(c(0.5,0.1,0.05,0.1), "cm"))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880")) 
+
+p2=p1+scale_y_continuous(breaks = c(0, 0.5, 1.0, 1.5,2.0),expand=c(0,0))+expand_limits(y=c(0,2.0))
+p2
+dev.off()
+
+p2
+
+
+cli1 <- read_xlsx("1.biochemical.xlsx",1)
+
+cli1$Group<-factor(cli1$Group,levels = c("LD","Cg","Rg","Fp"))
+
+
+# 2. 使用 Dunnett's t-test 进行事后比较
+library(multcomp)
+#dunnett_result <- glht(aov_result, linfct = mcp(Group = "Dunnett"))
+# 查看 Dunnett 检验的结果
+#summary(dunnett_result)
+
+pdf("Liver weight_Body weight_bacteria.pdf",
+    width = 1.1,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y = `liver/body`, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Liver weight/Body weight")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2=p1+scale_y_continuous(breaks = c(0, 0.02, 0.04, 0.06,0.08),expand=c(0,0))+expand_limits(y=c(0,0.10))+
+  scale_color_manual(values =  c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+
+p2
+
+pdf("TC_bacteria.pdf",
+    width = 0.9,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y = TC, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Serum TC")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2=p1+scale_y_continuous(breaks = c(0, 2, 4, 6,8),expand=c(0,0))+expand_limits(y=c(0,8))+
+  scale_color_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+p2
+
+pdf("TG_bacteria.pdf",
+    width = 1.0,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y = TG, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Serum TG")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))+ coord_cartesian(ylim = c(0, 0.6))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2=p1+scale_y_continuous(breaks = c(0, 0.2,0.4, 0.6),expand=c(0,0))+expand_limits(y=c(0,0.6))+
+  scale_color_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+p2
+
+pdf("TBA_bacteria.pdf",
+    width = 1.0,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y = TBA, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Serum TBA (umol/L)")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))+ coord_cartesian(ylim = c(0, 160))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2=p1+scale_y_continuous(breaks = c(0, 40,80, 120,160),expand=c(0,0))+expand_limits(y=c(0,160))+
+  scale_color_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+p2
+
+pdf("ALT_bacteria.pdf",
+    width = 1.0,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y = ALT, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Serum ALT (U/L)")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))+ coord_cartesian(ylim = c(0, 800))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2=p1+scale_y_continuous(breaks = c(0, 250,500, 750),expand=c(0,0))+expand_limits(y=c(0,800))+
+  scale_color_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+
+p2
+pdf("AST_bacteria.pdf",
+    width = 1.0,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y = AST, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Serum AST (U/L)")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))+ coord_cartesian(ylim = c(0, 800))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2=p1+scale_y_continuous(breaks = c(0, 200,400,600,800),expand=c(0,0))+expand_limits(y=c(0,800))+
+  scale_color_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+p2
+pdf("glu_bacteria.pdf",
+    width = 1.0,height = 1.4)
+p<-ggplot(cli1, aes(x = Group, y =`GLU-Q`, fill = factor(Group))) +
+  geom_bar(position = position_dodge(0.9), stat = "summary", fun = "mean", color = NA) +
+  geom_errorbar(position = position_dodge(0.9), stat = "summary", fun.data = mean_se, width = 0.2,aes(color = factor(Group))) +
+  #geom_point(aes(fill=Group),position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9), shape = factor(Group),color = "black", size = 0.6) + # 设置散点颜色为白色，边的颜色与group颜色对应，形状不同
+  geom_jitter(color=cli1$col,fill=NA,width =0.2,shape =cli1$Group, size = 0.65)+
+  theme_classic() +
+  xlab("")+labs(y="Serum glucose (mmol/L)")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 7,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=9),
+        legend.title=element_blank(),
+        plot.margin =unit(c(0.05,0,0,0), "cm"))+ coord_cartesian(ylim = c(0, 12))
+p1 <- p + scale_fill_manual(values = c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))+
+  scale_color_manual(values =c("#B2B9C1","#35395A","#E4B6B4","#C0C880","#5C9591"))
+p2
+dev.off()
+
+p2
+```

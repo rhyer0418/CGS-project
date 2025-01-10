@@ -1,0 +1,504 @@
+---
+title: "Figure 3 Aberrant metabolic patterns in CGS and HCs"
+author: "Ye Liu"
+date: "2024/1/20"
+format: html
+---
+
+## Figure 3
+
+a-b. The clustering analyses of partial least-squares discriminant analysis (PLS-DA) and orthogonal partial least-squares discriminant analysis (OPLS-DA)
+
+These results analysis on the website: <https://www.metaboanalyst.ca/>
+
+![](fig3a.jpg)
+
+![](fig3b.jpg)
+
+c\. The discriminatory metabolites identified between the CGS and HCs.
+
+The x-axis represents the log~2~FC of discriminatory metabolites. Blue and red circles denote CGS decreased and CGS enriched metabolites, respectively.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 3
+#| fig.height: 3.5
+#| out.width: "100%"
+
+library(ggplot2)
+library(ggpubr)
+library(RColorBrewer)
+library(ggsci)
+library(ggplot2)
+library(gridExtra)
+library(tidyverse)
+library(readxl)
+
+data<-read_xlsx("kegg_metabolites_pathway.xlsx",1)
+
+data$Name<- factor(data$Name, levels = data$Name[order(data$log2FC)])
+
+pdf("fig3c.pdf",
+    width =3,height = 3.5)
+p<-ggplot(data,aes(x=Name,y=log2FC))+
+  geom_point(aes(color = up_down), position = position_dodge(0.9), shape =1, size = 1,fill=NA, stroke = 1) +  #theme_test()+
+  xlab("")+coord_flip()+labs(y="log2FC")+
+  theme(legend.position="NA",
+        legend.key = element_blank(),
+        panel.grid = element_line(color = 'gray', linetype = 1, size = 0.1), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        axis.title.y = element_text(size = 10,face = "bold"),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        panel.border = element_rect(fill=NA,color="black", size=1),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        # legend.text=element_text(size=9),
+        legend.title=element_blank())
+p1<-p+scale_color_manual(name = "Group",values = c("#334A7D","#B82630"))
+p1
+dev.off()
+
+p1
+
+```
+
+d\. Summary of pathway analysis for 121 differential metabolites in MetaboAnalyst3.0, and significantly enriched pathways are displayed by a bubble plot (p \< 0.05, Fisher’s exact test).
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 4.8
+#| fig.height: 5
+#| out.width: "100%"
+
+library(ggplot2)
+library(ggpubr)
+library(RColorBrewer)
+library(ggsci)
+library(ggplot2)
+library(gridExtra)
+library(tidyverse)
+library(readxl)
+
+data<-read_xlsx("kegg_enrichment.xlsx",1)
+data<-data[1:25,]
+data$x1<-0.5*data$x
+data$MapTitle<- factor(data$MapTitle, levels = data$MapTitle[order(data$`LOG10(Pvalue)`)])
+
+pdf("fig3d.pdf",
+    width =4.8,height = 5)
+p<-ggplot(data, aes(x = MapTitle, y = ratio, size = x, color =`LOG10(Pvalue)`)) +
+  geom_point() +
+  #scale_color_gradient(low = "#334A7D", high = "#B82630") + 
+  scale_color_gradient2(low = "#334A7D", mid = "#FBB210", high = "#B82630", midpoint = 1.5, limits = c(0.5, 2.5)) +
+  labs(title = "", x = "Pathway", y = "Rich factor") +
+  #theme_classic() +
+  theme(legend.position="top",
+        legend.key.size = unit(0.1, "cm"),  # 设置图例的大小
+        legend.text = element_text(size = 5),legend.title  = element_text(size = 2),
+        axis.title.x = element_text(size = 12,face = "bold"),
+        axis.title.y = element_text(size = 12,face = "bold"),
+        axis.text.x = element_text(size = 8.5),
+        axis.text.y = element_text(size = 9),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.key = element_rect(fill = "transparent", color = NA) 
+        )+
+  guides(size = guide_legend(title = "Number"), color = guide_colorbar(title = "-log10(Pvalue)"))+
+  coord_flip()
+
+p
+
+dev.off()
+
+p
+
+```
+
+e\. Receiver operating characteristic (ROC) analysis to discriminate CGS from HCs based on species (orange), genus (blue), or metabolites (red) individually.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 4.8
+#| fig.height: 5
+#| out.width: "100%"
+
+library(plyr)
+library(pROC)
+library(ROCR) 
+
+diff<-read.csv("genus_roc.csv",header = T,row.names = 1)
+
+diff$group<-as.factor(diff$group)
+fit1=glm(data=diff,group~Terrisporobacter+Erysipelatoclostridium+	
+          Lachnospiraceae_UCG.010+	
+          Ruminococcus_gnavus_group+
+        Lachnospiraceae_UCG.001+
+          Clostridium_innocuum_group+
+        Senegalimassilia+	
+          Lachnospiraceae_UCG.004+
+          Coprobacter+
+        Roseburia+Sutterella+	Megamonas,
+         family = binomial()) 
+
+prob1 <- predict(fit1, diff, type = "response")
+rocboj1<-roc(diff$group,prob1,levels=c("Disease","Health"))
+roc_result <- coords(rocboj1, "best")
+auc1<-round(auc(diff$group,prob1),4)
+
+#plot(rocboj1,
+ #    legacy.axes = TRUE,
+  #  main="ROC曲线最佳阈值点",
+   # thresholds="best", # 基于youden指数选择roc曲线最佳阈值点
+    # print.thres="best") # 在roc曲线上显示最佳阈值点
+
+
+diff<-read.csv("sig_species_roc.csv",header = T,row.names = 1)
+
+diff$group<-as.factor(diff$group)
+fit2=glm(data=diff,group~	
+          Thermodesulfovibrio.thiophilus+
+        Leucothrix.mucor+
+        Clostridium.perfringens+Gordonibacter.massiliensis+Gordonibacter.sp..An230+	
+          Lachnospira.multipara+Desulfitobacterium.hafniense+Mycobacterium.avium,family = binomial()) 
+
+
+prob2 <- predict(fit2, diff, type = "response")
+rocboj2<-roc(diff$group,prob2)
+roc_result <- coords(rocboj2, "best")
+auc2<-round(auc(diff$group,prob2),4)
+
+
+#plot(rocboj2,
+ #  legacy.axes = TRUE,
+#   main="ROC曲线最佳阈值点",
+ #  thresholds="best", # 基于youden指数选择roc曲线最佳阈值点
+  # print.thres="best") # 在roc曲线上显示最佳阈值点
+
+
+diff<-read.csv("roc_metabo.csv",header = T,row.names = 1,check.names=FALSE)
+
+
+diff$group<-as.factor(diff$group)
+fit3=glm(data=diff,group~	
+          `1-Methylhistidine`+
+           `Ureidosuccinic acid`+
+           `L-Asparagine`+
+          `N-Acetylphenylalanine`+
+          `4-Aminobenzoic acid`+
+           `N-Glycolylneuraminic acid`+
+           `4-Coumaric acid`+
+          `3-Coumaric acid`+
+          `3-Hydroxyvaleric acid`+
+           Cholecalciferol+
+           `delta-Tocopherol`+
+           Neopterin+
+         `Nicotinic acid`
+           ,family = binomial()) 
+
+prob3 <- predict(fit3, diff, type = "response")
+rocboj3<-roc(diff$group,prob3,levels=c("Disease","Health"))
+roc_result <- coords(rocboj3, "best")
+auc3<-round(auc(diff$group,prob3),4)
+
+
+pdf("fig3e.pdf",
+    width =2.3,height = 2.3)
+
+p=ggroc(list(Genus=rocboj1,Species=rocboj2,Metabolites=rocboj3)
+  , linetype=1,size=1,alpha=1,legacy.axes = T) +
+  geom_abline(intercept = 0,slope = 1,color="grey",size=1,linetype=2)+
+  labs(x="False Positive Rate (1 - Specificity)", y="True Positive Rate (Sensitivity)") +
+  annotate("text",x=.75,y=.25,label=paste("AUC=",auc1),size=5,family="serif")+
+  annotate("text",x=.75,y=.35,label=paste("AUC=",auc2),size=5,family="serif")+
+  annotate("text",x=.75,y=.45,label=paste("AUC=",auc3),size=5,family="serif")+
+  coord_cartesian(xlim = c(0,1),ylim = c(0,1))+
+  theme_bw() +
+  theme(panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 9,face = "bold"),
+        axis.title.y = element_text(size = 9,face = "bold"),
+        axis.text.x = element_text(size = 8.5),
+        axis.text.y = element_text(size = 8.5),
+        panel.border = element_rect(fill=NA,color="black", size=2),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=6),legend.position ="NA",
+        legend.title=element_blank())+
+  scale_color_manual(values = c("#334A7D",  "#E38A06","#B82630"))
+p1=p+scale_y_continuous(breaks = c(0.00,0.25,0.50,0.75,1.00),expand=c(0,0))+expand_limits(y=c(0,1))
+p1
+
+dev.off()
+
+p1
+
+```
+
+f\. The variance of biochemical indices explained by different metabolites. The height of each bar represented the explained variance calculated using univariate linear regression. The bar represented significant associations (p \< 0.05). Potential biomarkers are highlighted. Red font: Increased. Blue font: Decreased
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 7
+#| fig.height: 3
+#| out.width: "100%"
+library(readxl)
+
+significant_microbes<-read_xlsx("lm_variance explained.xlsx",1)
+significant_microbes$Var_Name<-factor(significant_microbes$Var_Name,levels=c('HDLC','LDLC','TB','TC','TG','ALT','AST'))
+
+pdf("fig3f.pdf",width =7,height =2.62) 
+
+p<-ggplot(significant_microbes, aes(x = 100*R_squared, y = reorder(Microbe, R_squared))) +
+  geom_bar(stat = "identity", aes(fill = R_squared), width = 0.5) +
+  facet_wrap(~ Var_Name, ncol = 7) +
+  scale_fill_gradient(low = "#4AACC7", high = "#0072B5",guide = "none") + # 设置渐变色范围
+  labs(x = "Variance explained (%)", y = "Microbe") +
+  theme_classic()+
+  theme(legend.key = element_blank(),
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2), 
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 10,face = "bold"),
+        #axis.title.y = element_text(size = 15,face = "bold"),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 8.5),
+        axis.ticks.x=element_line(color="black",size=1,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=1,lineend = 1),
+        axis.title.y=element_blank()) + # 调整y轴标签字体大小
+  ggtitle("")
+p
+dev.off()
+
+p
+
+```
+
+g\. Species and metabolites included are those identified as significantly different between CGS and HCs.
+
+Enrichment in either group indicated by colored bars to the left and top of the plot. Significant correlations denoted by white stars (+p \< 0.1; ++p \< 0.05, Student’s t-test (two-sided), Benjamini-Hochberg adjustment for multiple comparisons. Exact p values are provided in Table S13). Higher taxonomy of species (order) was indicated by coloured bars.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 20
+#| fig.height: 8
+#| out.width: "100%"
+library(RColorBrewer)
+library(corrplot)
+library(ggcorrplot)
+library(ggthemes)
+library(pheatmap)
+library(psych)
+
+micro<- read.csv("diff_sig_species_roc.csv",row.names=1,header=T,check.names=FALSE)
+metabo<- read.csv("metabo_match_diff.csv",row.names=1,header=T,check.names=FALSE)
+metabo<-metabo[,1:60]
+
+micro1<-data.frame(t(micro))
+metabo1<-data.frame(t(metabo))
+colnames(metabo1)<-rownames(metabo)
+colnames(micro1)<-rownames(micro)
+micro1<-micro1[,apply(micro1,2,sum)>0]
+cor<-corr.test(metabo1,micro1,use="pairwise",method="spearman",adjust="BH")
+
+data<-as.data.frame(cor$r)
+pvalue<-as.data.frame(cor$p)
+fdr<-as.data.frame(cor$p.adj)
+fdr<-fdr[apply(fdr,1,min,na.rm=T)<0.1,]
+fdr<-fdr[,apply(fdr,2,min,na.rm=T)<0.1]
+data<-data[rownames(fdr),colnames(fdr)]
+
+pdf("fig3g.pdf",width=20,height=8)
+
+label<-matrix("",nrow = nrow(data),ncol = ncol(data))
+label[which(fdr<0.05)]<-"+"
+label[which(fdr<0.01)]<-"++"
+#注意行名列名的一致
+annotation_col = read.csv("fecal_match_metabolites_annotation.csv",row.names=1,header = T)
+rownames(annotation_col)[26]<-"D-α-Hydroxyglutaric acid"
+annotation_col$group<-as.factor(annotation_col$group)
+
+annotation_row = read.csv("species_rel_abun_annotation.csv",row.names=1,header = T)
+annotation_row$Group<-as.factor(annotation_row$Group)
+annotation_row$order<-as.factor(annotation_row$order)
+
+ann_colors = list(
+  group=c("Amino acids, peptides, and analogues"="#364A7D","Benzenoids"="#DF8F44FF",
+          "Lipids and lipid-like molecules"="#4BACC7","Organoheterocyclic compounds"="#BE3730",
+          "Phenylpropanoids and polyketides"="#F7AF1A","Others"="#7F7F7F"),
+  Group =c("Enriched in gallstone samples"="#E08262",
+           "Enriched in healthy samples"="#79AF97FF"),
+  order=c("Acidaminococcales"="#E41A1C",
+          "Bacteroidales"="#4DAF4A",
+          "Bifidobacteriales"="#984EA3",
+          "Clostridiales" ="#FFFFB3",
+          "Coriobacteriales"="#F781BF","Corynebacteriales"="#999999",
+          "Eggerthellales"= "#D95F02",
+          "Enterobacterales"="#80B1D3","Erysipelotrichales"="#FDB462",
+          "Flavobacteriales"="#4fbe6c",
+          "Lactobacillales"="#8DD3C7",
+          "Nitrospirales"="#79AF97FF",
+          "Unclassified"="#7F7F7F","Thiotrichales"="#dd6bbb")
+)
+head(ann_colors)
+
+p<-pheatmap(data,cluster_cols=T,cluster_row=F,display_numbers=label,
+         annotation_row = annotation_col,annotation_col = annotation_row,annotation_colors = ann_colors,
+         cellwidth=8.5,cellheight=7,fontsize_number=5,angle_col=c("90"),number_color="White",
+         fontsize_row=9,fontsize_col=9,
+         color=colorRampPalette(colors = c("#386092","white","#E8A48B"))(100),
+         border=NA,
+         legend = TRUE
+)
+p
+dev.off()
+p
+```
+
+![](fig3g.jpg)
+
+h\. Levels of D-α-Hydroxyglutaric acid, nicotinic acid, and indole.
+
+CGS, cholesterol gallstone patients; HCs, healthy controls; FC, fold change.
+
+```{r}
+#| echo: false
+#| eval: true
+#| results: markup
+#| warning: false
+#| message: false
+#| fig-show: hold
+#| fig.width: 1.8
+#| fig.height: 1
+#| out.width: "100%"
+library(ggplot2)
+library(ggpubr)
+
+metabolites<- read.csv("data_normalized.csv",row.names=1,header=T)
+
+data<-as.data.frame(t(metabolites))
+data$Label<- factor(data$Label, levels = c('Health', 'Disease'))
+data$`Nicotinic acid`<-as.numeric(data$`Nicotinic acid`)
+data$Indole<-as.numeric(data$Indole)
+data$`D-α-Hydroxyglutaric acid`<-as.numeric(data$`D-α-Hydroxyglutaric acid`)
+
+pdf("Nicotinic acid.pdf",
+    width = 1.4,height = 0.8)
+p<-ggplot(data, aes(x=Label, y=`Nicotinic acid`))+
+  stat_boxplot(geom="errorbar",position = position_dodge(0.9),width=0.2,aes(data$Label))+
+  geom_boxplot(aes(fill=Label),color=NA,position = position_dodge(0.9),lwd=0.1)+
+  geom_jitter(fill=NA,width =0.1,shape =data$Label, size = 0.15)+
+  theme_classic() +ylim(-2,2)+
+  xlab("")+labs(y="Nicotinic acid")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2),
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size =7,face = "bold"),
+        axis.text.x = element_text(size =7),
+        axis.text.y = element_text(size =6),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=14),
+        legend.title=element_blank())+
+  coord_flip()
+p1 <- p + scale_fill_manual(values = c("#434E7A","#D29742"))+
+  # scale_color_manual(values = c("#434E7A","#D29742"))+
+  stat_compare_means(aes(color = Label), comparisons = list(c('Health', 'Disease')), method = "wilcox.test", size = 1, position = position_dodge(0.9), label.y = c(2.0, 1.3), label.sep = 1.2, label = "p = {p.format}") 
+p2=p1+scale_y_continuous(breaks = c(-2, -1, 0, 1,2),expand=c(0,0))+expand_limits(y=c(-2,2))+
+  scale_color_manual(values = c("#434E7A","#D29742"))
+p2
+dev.off()
+
+
+pdf("D-α-Hydroxyglutaric acid.pdf",
+    width = 1.8,height = 1)
+
+p<-ggplot(data, aes(x=Label, y=`D-α-Hydroxyglutaric acid`))+
+  stat_boxplot(geom="errorbar",position = position_dodge(0.9),width=0.2,aes(data$Label))+
+  geom_boxplot(aes(fill=Label),color=NA,position = position_dodge(0.9),lwd=0.1)+
+  geom_jitter(fill=NA,width =0.1,shape =data$Label, size = 0.15)+
+  theme_classic() +ylim(-2,2)+
+  xlab("")+labs(y="D-α-Hydroxyglutaric acid")+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2),
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size =7,face = "bold"),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size =7),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=14),
+        legend.title=element_blank())+
+  coord_flip()
+p1 <- p + scale_fill_manual(values = c("#434E7A","#D29742"))+
+ # scale_color_manual(values = c("#434E7A","#D29742"))+
+  stat_compare_means(aes(color = Label), comparisons = list(c('Health', 'Disease')), method = "wilcox.test", size = 1.5, position = position_dodge(0.9), label.y = c(2.0, 1.3), label.sep = 1.2, label = "p = {p.format}") 
+p2=p1+scale_y_continuous(breaks = c(-2, -1, 0, 1,2),expand=c(0,0))+expand_limits(y=c(-2,2))+
+  scale_color_manual(values = c("#434E7A","#D29742"))
+p2
+dev.off()
+
+
+pdf("Indole.pdf",
+    width =1.8,height = 1)
+p<-ggplot(data, aes(x=Label, y=Indole))+
+  stat_boxplot(geom="errorbar",position = position_dodge(0.9),width=0.2,aes(data$Label))+
+  geom_boxplot(aes(fill=Label),color=NA,position = position_dodge(0.9),lwd=0.1)+
+  geom_jitter(fill=NA,width =0.1,shape =data$Label, size = 0.15)+
+  theme_classic() +
+  xlab("")+labs(y="Indole")+ylim(-2, 2)+
+  theme(legend.position="none",
+        panel.grid = element_line(color = 'gray', linetype = 0, size = 0.2),
+        panel.background = element_blank(), 
+        axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size =7,face = "bold"),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7),
+        axis.ticks.x=element_line(color="black",size=0.5,lineend = 1),
+        axis.ticks.y=element_line(color="black",size=0.5,lineend = 1),
+        legend.text=element_text(size=14),
+        legend.title=element_blank())+
+  coord_flip()
+p1 <- p + scale_fill_manual(values = c("#434E7A","#D29742"))+
+  # scale_color_manual(values = c("#434E7A","#D29742"))+
+  stat_compare_means(aes(color = Label), comparisons = list(c('Health', 'Disease')), method = "wilcox.test", size = 1.5, position = position_dodge(0.9), label.y = c(2.0, 1.3), label.sep = 1.2, label = "p = {p.format}") 
+p2=p1+scale_y_continuous(breaks = c(-2, -1, 0, 1,2),expand=c(0,0))+expand_limits(y=c(-2,2))+
+  scale_color_manual(values = c("#434E7A","#D29742"))
+p2
+dev.off()
+
+
+```
+
+![](D-α-Hydroxyglutaric acid.jpg)
+
+![](Indole.jpg)
+
+![](Nicotinic acid.jpg)

@@ -1,0 +1,24 @@
+,Microbe,Var_Name,R_squared,P_value
+AST.`Roseburia sp. CAG:18_43_25`,Roseburia sp. CAG:18_43_25,AST,0.239227311,3.71E-07
+ALT.`Roseburia sp. CAG:18_43_25`,Roseburia sp. CAG:18_43_25,ALT,0.209202161,2.48E-06
+TBIL.`Shigella sonnei`,Shigella sonnei,TBIL,0.092699442,0.002428594
+TBIL.`Shigella flexneri`,Shigella flexneri,TBIL,0.081748468,0.004525951
+TBIL.`Shigella dysenteriae`,Shigella dysenteriae,TBIL,0.076668545,0.006039925
+TC.`Firmicutes bacterium CAG:102`,Firmicutes bacterium CAG:102,TC,0.074651019,0.006773488
+TBIL.`Escherichia coli`,Escherichia coli,TBIL,0.063674854,0.012648238
+HDLC.`Clostridium sp. CAG:780`,Clostridium sp. CAG:780,HDLC,0.063404635,0.01284461
+ALT.`Clostridium  glycyrrhizinilyticum`,Clostridium  glycyrrhizinilyticum,ALT,0.063087039,0.01307935
+HDLC.`Firmicutes bacterium CAG:102`,Firmicutes bacterium CAG:102,HDLC,0.056682393,0.018859393
+TG.`Clostridium sp. CAG:7`,Clostridium sp. CAG:7,TG,0.054861016,0.020934846
+LDLC.`Firmicutes bacterium CAG:102`,Firmicutes bacterium CAG:102,LDLC,0.053751349,0.022311663
+LDLC.`Roseburia inulinivorans`,Roseburia inulinivorans,LDLC,0.052031042,0.024630807
+ALT.`Clostridium sp. CAG:7`,Clostridium sp. CAG:7,ALT,0.048975765,0.029374022
+HDLC.`Clostridiales bacterium 42_27`,Clostridiales bacterium 42_27,HDLC,0.046066213,0.034761115
+TC.`Faecalibacterium sp. CAG:82`,Faecalibacterium sp. CAG:82,TC,0.045722366,0.035461538
+TG.`Faecalibacterium sp. CAG:82`,Faecalibacterium sp. CAG:82,TG,0.045601787,0.035710582
+TC.`Faecalibacterium prausnitzii`,Faecalibacterium prausnitzii,TC,0.045439601,0.036048401
+LDLC.`Faecalibacterium sp. CAG:82`,Faecalibacterium sp. CAG:82,LDLC,0.045075373,0.036819086
+HDLC.`uncultured Flavonifractor sp.`,uncultured Flavonifractor sp.,HDLC,0.044481676,0.03811186
+TG.`Eubacterium sp. CAG:38`,Eubacterium sp. CAG:38,TG,0.042431068,0.042948553
+TC.`Roseburia inulinivorans`,Roseburia inulinivorans,TC,0.042255131,0.043392018
+TC.`Clostridiales bacterium 41_12_two_minus`,Clostridiales bacterium 41_12_two_minus,TC,0.042135502,0.043696257

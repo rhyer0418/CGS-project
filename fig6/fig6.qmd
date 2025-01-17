@@ -78,7 +78,7 @@ p3
 
 e-m: Box plot
 
-\(E\) The relative lipid content of each group. (F) The grade of experimental cholesterol gallstones (CGSs) in the mice was based on the observed gallstone. (G) The ratio of liver weight to body weight in different groups. (H) Level of serum glucose. Each box centres on the median, with lower and upper bounds representing the first and third quartiles (25th and 75th percentile), respectively (*n* = 12). (I−M) Levels of serum ALT, AST, TC, TG, and TBA.
+\(E\) The relative lipid content of each group. (F) The grade of experimental cholesterol gallstones (CGSs) in the mice was based on the observed gallstone. (G) The ratio of liver weight to body weight in different groups. (H) Level of serum glucose. Each box centres on the median, with lower and upper bounds representing the first and third quartiles (25th and 75th percentile), respectively. (I−M) Levels of serum ALT, AST, TC, TG, and TBA.
 
 TC, total cholesterol; TG, triglycerides; ALT, alanine aminotransferase; AST, aspartate aminotransferase; TBA, total bile acid; NaB, sodium butyrate; NaP, sodium propionate; NaA, sodium acetate; FOS, fructooligosaccharide; SCFAs, short-chain fatty acids. *p*-values were calculated using one-way ANOVA with Dunnett’s post hoc test.
 
@@ -101,7 +101,7 @@ library(gridExtra)
 library(showtext)
 library(readxl)
 
-cli3 <- read_xlsx("rel_lipid_oil.xlsx", 3)
+cli3 <- read_xlsx("rel_lipid_oil.xlsx", 2)
 
 cli3$Group<-factor(cli3$Group,levels = c("LD","NaB","NaP","NaA","FOS"))
 

@@ -65,7 +65,7 @@ p2
 
 e-l: Box plot
 
-\(E\) The relative lipid content of each group. Each box centres on the median, with lower and upper bounds representing the first and third quartile (25th and 75th percentile), respectively (*n* = 8). (F) The ratio of liver weight to body weight in different groups. (G−H) Level of serum glucose and serum TBA. (I−L) Levels of serum ALT, AST, TC, and TG.
+\(E\) The relative lipid content of each group. Each box centres on the median, with lower and upper bounds representing the first and third quartile (25th and 75th percentile), respectively (*n* = 3). (F) The ratio of liver weight to body weight in different groups. (G−H) Level of serum glucose and serum TBA. (I−L) Levels of serum ALT, AST, TC, and TG.
 
 TC, total cholesterol; TG, triglycerides; ALT, alanine aminotransferase; AST, aspartate aminotransferase; TBA, total bile acid;Cg, *Clostridium glycyrrhizinilyticum*; Rg, *Ruminococcus gnavus*; Fp, *Faecalibacterium prausnitzii*. *p*-values were calculated using one-way ANOVA with Dunnett’s post hoc test.
 
@@ -88,7 +88,7 @@ library(gridExtra)
 library(showtext)
 library(readxl)
 
-cli3 <- read_xlsx("rel_lipid_oil.xlsx", 2)
+cli3 <- read_xlsx("rel_lipid_oil.xlsx", 1)
 
 cli3$Group<-factor(cli3$Group,levels = c("LD","Cg","Rg","Fp"))
 
